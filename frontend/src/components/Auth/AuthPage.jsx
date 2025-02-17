@@ -1,9 +1,12 @@
-// src/components/Auth/AuthPage.jsx
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import authImage from '../../assets/auth-illustration.webp';
+import API_CONFIG from '../../config/api.config';
 import './auth.css';
 
 const AuthPage = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -11,9 +14,10 @@ const AuthPage = () => {
     password: '',
     confirmPassword: ''
   });
-  const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationSummary, setValidationSummary] = useState('');
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,46 +32,65 @@ const AuthPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    setValidationSummary(''); 
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouchedFields(prev => ({ ...prev, [name]: true }));
+  };
+
+  const getInputValidationState = (fieldName) => {
+    if (!touchedFields[fieldName]) return '';
+    
+    switch (fieldName) {
+      case 'name':
+        return !isLogin && !formData.name ? 'invalid' : '';
+      case 'email':
+        return !formData.email || !validateEmail(formData.email) ? 'invalid' : '';
+      case 'password':
+        return !formData.password || !validatePassword(formData.password) ? 'invalid' : '';
+      case 'confirmPassword':
+        return !isLogin && formData.password !== formData.confirmPassword ? 'invalid' : '';
+      default:
+        return '';
     }
   };
 
   const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Invalid email format';
+    let validationMessage = '';
+    
+    if (!validateEmail(formData.email)) {
+      validationMessage += 'Please enter a valid email address. ';
+    }
+    
+    if (!validatePassword(formData.password)) {
+      validationMessage += 'Password must contain at least 6 characters, including uppercase, lowercase, number, and special character. ';
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (!validatePassword(formData.password)) {
-      newErrors.password = 'Password must be at least 6 characters long and include uppercase, lowercase, number, and special character';
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      validationMessage += 'Passwords do not match. ';
     }
 
-    if (!isLogin) {
-      if (!formData.name) {
-        newErrors.name = 'Name is required';
-      }
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setValidationSummary(validationMessage.trim());
+    return validationMessage === '';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const fields = ['email', 'password'];
+    if (!isLogin) fields.push('name', 'confirmPassword');
+    
+    setTouchedFields(
+      fields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
+    );
+
     if (!validateForm()) return;
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-      const response = await fetch(endpoint, {
+      const endpoint = isLogin ? API_CONFIG.ENDPOINTS.LOGIN : API_CONFIG.ENDPOINTS.SIGNUP;
+      const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -75,13 +98,18 @@ const AuthPage = () => {
 
       const data = await response.json();
       if (data.success) {
-        localStorage.setItem('token', data.data.token);
-        // Handle successful auth
+        localStorage.setItem(API_CONFIG.TOKEN_KEY, data.data.token);
+        navigate('/task', { 
+          state: { 
+            name: formData.name || data.data.name,
+            email: formData.email 
+          } 
+        });
       } else {
-        setErrors({ submit: data.message });
+        setValidationSummary(data.message || 'Authentication failed');
       }
     } catch (error) {
-      setErrors({ submit: 'An error occurred. Please try again.' });
+      setValidationSummary('An error occurred. Please try again.');
     }
   };
 
@@ -90,7 +118,7 @@ const AuthPage = () => {
       <div className="auth-card">
         <div className="auth-image">
           <img 
-            src="/auth-illustration.webp" 
+            src={authImage}
             alt="Illustration" 
             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
@@ -105,18 +133,24 @@ const AuthPage = () => {
               {isLogin ? 'Welcome back you\'ve been missed!' : 'Get started with your account'}
             </p>
 
-            <form onSubmit={handleSubmit}>
+            {validationSummary && (
+              <div className="validation-summary">
+                {validationSummary}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="auth-form-content">
               {!isLogin && (
                 <div className="form-group">
                   <input
                     type="text"
                     name="name"
                     placeholder="Full Name"
-                    className="input-field"
+                    className={`input-field ${getInputValidationState('name')}`}
                     value={formData.name}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                   />
-                  {errors.name && <p className="error-message">{errors.name}</p>}
                 </div>
               )}
 
@@ -125,11 +159,11 @@ const AuthPage = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address"
-                  className="input-field"
+                  className={`input-field ${getInputValidationState('email')}`}
                   value={formData.email}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                 />
-                {errors.email && <p className="error-message">{errors.email}</p>}
               </div>
 
               <div className="form-group password-field">
@@ -137,9 +171,10 @@ const AuthPage = () => {
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
-                  className="input-field"
+                  className={`input-field ${getInputValidationState('password')}`}
                   value={formData.password}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
                 />
                 <button
                   type="button"
@@ -148,7 +183,6 @@ const AuthPage = () => {
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
-                {errors.password && <p className="error-message">{errors.password}</p>}
               </div>
 
               {!isLogin && (
@@ -157,9 +191,10 @@ const AuthPage = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm Password"
-                    className="input-field"
+                    className={`input-field ${getInputValidationState('confirmPassword')}`}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
                   />
                   <button
                     type="button"
@@ -168,13 +203,8 @@ const AuthPage = () => {
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
-                  {errors.confirmPassword && (
-                    <p className="error-message">{errors.confirmPassword}</p>
-                  )}
                 </div>
               )}
-
-              {errors.submit && <p className="error-message">{errors.submit}</p>}
 
               <button type="submit" className="submit-button">
                 {isLogin ? 'Sign In' : 'Sign Up'}
@@ -186,7 +216,8 @@ const AuthPage = () => {
                 className="switch-mode-button"
                 onClick={() => {
                   setIsLogin(!isLogin);
-                  setErrors({});
+                  setTouchedFields({});
+                  setValidationSummary('');
                   setFormData({
                     name: '',
                     email: '',
