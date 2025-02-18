@@ -21,7 +21,7 @@
 .auth-image {
   display: none;
   width: 50%;
-  background-color: #f3e8ff;
+  background-color: #a377d1;
   padding: 3rem;
 }
 
@@ -43,11 +43,14 @@
   font-weight: bold;
   color: #111827;
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .auth-subtitle {
   color: #6b7280;
   margin-bottom: 1rem;
+  text-align: center;
+  
 }
 
 .validation-summary {
@@ -104,7 +107,7 @@
 .submit-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #f87171;
+  background-color: #a855f7;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -115,7 +118,7 @@
 }
 
 .submit-button:hover {
-  background-color: #ef4444;
+  background-color: #652c9b;
 }
 
 .switch-mode {
@@ -124,7 +127,7 @@
 }
 
 .switch-mode-button {
-  color: #7c3aed;
+  color: #ef4444;
   background: none;
   border: none;
   font-size: 0.875rem;

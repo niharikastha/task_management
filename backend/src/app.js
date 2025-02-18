@@ -11,7 +11,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 app.use("/", userRoutes);  
-app.use("/task", taskRoutes);
+app.use("/tasks", taskRoutes);
 
 const connectDB = require("./config/db");
 
