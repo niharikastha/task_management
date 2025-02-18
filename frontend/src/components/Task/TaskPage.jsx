@@ -43,7 +43,11 @@ const TaskBoard = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [sortBy]); // Re-fetch when sort type changes
+  }, [sortBy]);
+
+  useEffect(() => {
+    console.log("Updated tasks:", tasks);
+  }, [tasks]);
 
   const getColumnsBySort = () => {
     switch (sortBy) {
@@ -91,25 +95,29 @@ const TaskBoard = () => {
   };
 
   const organizeTasks = (tasksData) => {
+    // Ensure tasksData is an array
+    const tasks = Array.isArray(tasksData) ? tasksData : 
+                  (tasksData?.tasks || tasksData?.data || []);
+  
     if (sortBy === 'Priority') {
       return {
-        high: tasksData.filter(task => task.priority === 'high'),
-        medium: tasksData.filter(task => task.priority === 'medium'),
-        low: tasksData.filter(task => task.priority === 'low')
+        high: tasks.filter(task => task.priority === 'high'),
+        medium: tasks.filter(task => task.priority === 'medium'),
+        low: tasks.filter(task => task.priority === 'low')
       };
     } else {
       const organized = {
-        todo: tasksData.filter(task => task.status === 'todo'),
-        backlog: tasksData.filter(task => task.status === 'backlog'),
-        completed: tasksData.filter(task => task.status === 'completed')
+        todo: tasks.filter(task => task.status === 'todo'),
+        backlog: tasks.filter(task => task.status === 'backlog'),
+        completed: tasks.filter(task => task.status === 'completed')
       };
-
+  
       if (sortBy === 'Due Date') {
         Object.keys(organized).forEach(status => {
           organized[status] = sortTasksByDueDate(organized[status]);
         });
       }
-
+  
       return organized;
     }
   };
@@ -124,7 +132,10 @@ const TaskBoard = () => {
       });
 
       const data = await response.json();
-      setTasks(organizeTasks(data));
+      console.log("Raw data type:", typeof data, "Data:", data); 
+      const organizedTasks = organizeTasks(data);
+      console.log("Organized tasks:", organizedTasks);
+      setTasks(organizedTasks);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
     }
@@ -302,7 +313,7 @@ const TaskBoard = () => {
                     priority: 'medium',
                     status: 'todo',
                     dueDate: '',
-                    assignedTo:userId,
+                    assignedTo: userId,
                     subtasks: []
                   });
                   // Fetch updated tasks
