@@ -1,4 +1,5 @@
 const Task = require("../models/task");
+const User = require("../models/user");
 
 const taskController = {
     createTask: async (req, res) => {
@@ -111,6 +112,28 @@ const taskController = {
             return res.status(500).json({ success: false, message: "Server error.", error: error.message });
         }
     },
+
+    findByUser: async (req, res) => {
+        try {
+            const id = req.params.id;
+    
+            const user = await User.findOne({ _id: id });
+            if (!user) {
+                return res.status(404).json({ success: false, message: "User not found." });
+            }    
+            const tasks = await Task.find({ assignedTo: user._id });
+    
+            return res.status(200).json({
+                success: true,
+                message: tasks.length > 0 ? "Tasks retrieved successfully." : "Task doesnot exist.",
+                data: tasks 
+            });
+    
+        } catch (error) {
+            console.error("Error in findByUser:", error); 
+            return res.status(500).json({ success: false, message: "Server error.", error: error.message });
+        }
+    }
 };
 
 module.exports = taskController;

@@ -95,7 +95,7 @@
 
 .password-toggle {
   position: absolute;
-  right: 1rem;
+  right: 0rem;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -115,6 +115,7 @@
   cursor: pointer;
   transition: background-color 0.2s;
   margin-top: auto;
+  justify-content: center;
 }
 
 .submit-button:hover {

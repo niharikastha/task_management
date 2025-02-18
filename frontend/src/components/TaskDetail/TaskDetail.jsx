@@ -4,12 +4,14 @@ import { ChevronLeft, Trash2, Save, AlertCircle, Calendar, Flag } from 'lucide-r
 import { toast } from 'react-toastify';
 import API_CONFIG from '../../config/api.config';
 import './taskDetail.css';
+import Navbar from '../Navbar/Navbar';
 
 const TaskDetailPage = () => {
     const { taskId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const initialTask = location.state?.task || null;
+    const username = location.state?.name || 'User';
 
     const [loading, setLoading] = useState(!initialTask);
     const [saving, setSaving] = useState(false);
@@ -146,111 +148,115 @@ const TaskDetailPage = () => {
 
 
     return (
-        <div className="task-detail-container">
-            <div className="task-detail-header">
-                <button className="back-button" onClick={() => navigate('/tasks')}>
-                    <ChevronLeft size={18} />
-                    Back to Tasks
-                </button>
+        <div>
+            <Navbar username={username} />
 
-                <button className="delete-button" onClick={handleDeleteTask} disabled={deleting}>
-                    <Trash2 size={18} />
-                    {deleting ? 'Deleting...' : 'Delete Task'}
-                </button>
-            </div>
-
-            <div className="task-detail-card">
-                <form onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        name="title"
-                        value={editedTask.title || ''}
-                        onChange={handleInputChange}
-                        placeholder="Task title"
-                        className="task-title-input"
-                    />
-
-                    <div className="task-controls">
-                        <div className="control-group">
-                            <label className="control-label">Priority</label>
-                            <input
-                                type="range"
-                                min="1"
-                                max="3"
-                                value={getPriorityValue(editedTask.priority)}
-                                onChange={(e) => handleInputChange({
-                                    target: {
-                                        name: 'priority',
-                                        value: getPriorityFromValue(e.target.value)
-                                    }
-                                })}
-                                className="priority-slider"
-                            />
-                            <div className="priority-indicator">
-                                <div className={`priority-dot ${editedTask.priority}`}></div>
-                                <span>{editedTask.priority?.charAt(0).toUpperCase() + editedTask.priority?.slice(1)}</span>
-                            </div>
-                        </div>
-
-                        <div className="control-group">
-                            <label className="control-label">Status</label>
-                            <select
-                                name="status"
-                                value={editedTask.status || 'todo'}
-                                onChange={handleInputChange}
-                                className="status-select"
-                            >
-                                <option value="backlog">Backlog</option>
-                                <option value="todo">Todo</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                            <div className={`status-badge ${editedTask.status}`}>
-                                {editedTask.status?.charAt(0).toUpperCase() + editedTask.status?.slice(1)}
-                            </div>
-                        </div>
-
-                        <div className="control-group">
-                            <label className="control-label">Due Date</label>
-                            <input
-                                type="date"
-                                name="dueDate"
-                                value={editedTask.dueDate ? editedTask.dueDate.split('T')[0] : ''}
-                                onChange={handleInputChange}
-                                min={today} 
-                                className="date-input"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="task-description-section">
-                        <label className="description-label">Description</label>
-                        <textarea
-                            name="description"
-                            value={editedTask.description || ''}
-                            onChange={handleInputChange}
-                            placeholder="Add a detailed description of your task..."
-                            className="task-description-textarea"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="submit-button"
-                        disabled={saving}
-                    >
-                        {saving ? (
-                            <>
-                                <div className="spinner-small" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <Save size={16} />
-                                Save Changes
-                            </>
-                        )}
+            <div className="task-detail-container">
+                <div className="task-detail-header">
+                    <button className="back-button" onClick={() => navigate('/tasks')}>
+                        <ChevronLeft size={18} />
+                        Back to Tasks
                     </button>
-                </form>
+
+                    <button className="delete-button" onClick={handleDeleteTask} disabled={deleting}>
+                        <Trash2 size={18} />
+                        {deleting ? 'Deleting...' : 'Delete Task'}
+                    </button>
+                </div>
+
+                <div className="task-detail-card">
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="text"
+                            name="title"
+                            value={editedTask.title || ''}
+                            onChange={handleInputChange}
+                            placeholder="Task title"
+                            className="task-title-input"
+                        />
+
+                        <div className="task-controls">
+                            <div className="control-group">
+                                <label className="control-label">Priority</label>
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="3"
+                                    value={getPriorityValue(editedTask.priority)}
+                                    onChange={(e) => handleInputChange({
+                                        target: {
+                                            name: 'priority',
+                                            value: getPriorityFromValue(e.target.value)
+                                        }
+                                    })}
+                                    className="priority-slider"
+                                />
+                                <div className="priority-indicator">
+                                    <div className={`priority-dot ${editedTask.priority}`}></div>
+                                    <span>{editedTask.priority?.charAt(0).toUpperCase() + editedTask.priority?.slice(1)}</span>
+                                </div>
+                            </div>
+
+                            <div className="control-group">
+                                <label className="control-label">Status</label>
+                                <select
+                                    name="status"
+                                    value={editedTask.status || 'todo'}
+                                    onChange={handleInputChange}
+                                    className="status-select"
+                                >
+                                    <option value="backlog">Backlog</option>
+                                    <option value="todo">Todo</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                                <div className={`status-badge ${editedTask.status}`}>
+                                    {editedTask.status?.charAt(0).toUpperCase() + editedTask.status?.slice(1)}
+                                </div>
+                            </div>
+
+                            <div className="control-group">
+                                <label className="control-label">Due Date</label>
+                                <input
+                                    type="date"
+                                    name="dueDate"
+                                    value={editedTask.dueDate ? editedTask.dueDate.split('T')[0] : ''}
+                                    onChange={handleInputChange}
+                                    min={today}
+                                    className="date-input"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="task-description-section">
+                            <label className="description-label">Description</label>
+                            <textarea
+                                name="description"
+                                value={editedTask.description || ''}
+                                onChange={handleInputChange}
+                                placeholder="Add a detailed description of your task..."
+                                className="task-description-textarea"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="submit-button"
+                            disabled={saving}
+                        >
+                            {saving ? (
+                                <>
+                                    <div className="spinner-small" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={16} />
+                                    Save Changes
+                                </>
+                            )}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

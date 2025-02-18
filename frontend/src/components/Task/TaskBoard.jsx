@@ -150,7 +150,7 @@ const TaskBoard = () => {
             
             setTasks(revertedTasks);
             
-            toast.error(`Failed to update task: ${error.message || 'Unknown error'}`, {
+            toast.error(`Failed to update task`, {
                 position: "top-right",
                 autoClose: 2000,
             });
@@ -201,7 +201,7 @@ const TaskBoard = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TASK}`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TASK}/user/${userId}`, {
                 headers: {
                     'Authorization': `${token}`
                 }

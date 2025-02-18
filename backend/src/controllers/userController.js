@@ -38,7 +38,7 @@ const userControlller = {
     
             const existingUser = await User.findOne({ email: email });
             if (existingUser) {
-                return res.status(400).json({ success: false, message: "User already exists." });
+                return res.status(400).json({ success: false, message: "Email already exists. Please login." });
             }
     
             const newUser = new User({ name, email, password });

@@ -58,24 +58,40 @@ const AuthPage = () => {
   };
 
   const validateForm = () => {
-    let validationMessage = '';
-    
+    let newTouchedFields = {};
+  
+    if (!isLogin && !formData.name.trim()) {
+      setValidationSummary('Full Name is required.');
+      newTouchedFields = { name: true };
+      setTouchedFields(newTouchedFields);
+      return false;
+    }
+  
     if (!validateEmail(formData.email)) {
-      validationMessage += 'Please enter a valid email address. ';
+      setValidationSummary('Please enter a valid email address.');
+      newTouchedFields = { email: true };
+      setTouchedFields(newTouchedFields);
+      return false;
     }
     
     if (!validatePassword(formData.password)) {
-      validationMessage += 'Password must contain at least 6 characters, including uppercase, lowercase, number, and special character. ';
+      setValidationSummary('Password must contain at least 6 characters, including uppercase, lowercase, number, and special character.');
+      newTouchedFields = { password: true };
+      setTouchedFields(newTouchedFields);
+      return false;
     }
-
+  
     if (!isLogin && formData.password !== formData.confirmPassword) {
-      validationMessage += 'Passwords do not match. ';
+      setValidationSummary('Passwords do not match.');
+      newTouchedFields = { confirmPassword: true };
+      setTouchedFields(newTouchedFields);
+      return false;
     }
-
-    setValidationSummary(validationMessage.trim());
-    return validationMessage === '';
-  };
-
+  
+    setValidationSummary('');
+    return true;
+  };  
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -109,7 +125,7 @@ const AuthPage = () => {
         setValidationSummary(data.message || 'Authentication failed');
       }
     } catch (error) {
-      setValidationSummary('An error occurred. Please try again.');
+      setValidationSummary('An error occurred. Please try again later.');
     }
   };
 
