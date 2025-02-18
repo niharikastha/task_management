@@ -3,81 +3,115 @@ import { Plus, Edit, Search, ChevronDown } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import API_CONFIG from '../../config/api.config';
 import './task.css';
+import { jwtDecode } from 'jwt-decode';
 
 const TaskBoard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('Priority'); 
+  const [sortBy, setSortBy] = useState('Priority');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [tasks, setTasks] = useState({
     high: [],
     medium: [],
-    low: []
+    low: [],
+    todo: [],
+    backlog: [],
+    completed: []
   });
   const [editingTask, setEditingTask] = useState(null);
+  const token = localStorage.getItem("auth_token");
+
+  let userId = "";
+  if (token) {
+    try {
+      const decodedToken = jwtDecode(token);
+      userId = decodedToken.userId;
+    } catch (error) {
+      console.error("Invalid token:", error);
+    }
+  }
 
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
     priority: 'medium',
-    dueDate: '',
     status: 'todo',
+    dueDate: '',
+    assignedTo: userId || '',
     subtasks: []
   });
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [sortBy]); // Re-fetch when sort type changes
+
+  const getColumnsBySort = () => {
+    switch (sortBy) {
+      case 'Priority':
+        return [
+          { id: 'high', title: 'High' },
+          { id: 'medium', title: 'Medium' },
+          { id: 'low', title: 'Low' }
+        ];
+      case 'Due Date':
+      case 'Status':
+        return [
+          { id: 'backlog', title: 'Backlog' },
+          { id: 'todo', title: 'Todo' },
+          { id: 'completed', title: 'Completed' }
+        ];
+      default:
+        return [];
+    }
+  };
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-  
+
     const { source, destination } = result;
     const newTasks = { ...tasks };
-    
+
     const draggedTask = newTasks[source.droppableId].splice(source.index, 1)[0];
-    
     newTasks[destination.droppableId].splice(destination.index, 0, draggedTask);
-    
+
     setTasks(newTasks);
   };
 
-  const sortTasks = (tasksToSort) => {
-    return tasksToSort.sort((a, b) => {
-      if (sortBy === 'dueDate') {
-        // First sort by priority
-        const priorityOrder = { high: 0, medium: 1, low: 2 };
-        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-        if (priorityDiff !== 0) return priorityDiff;
-        
-        // Then by due date
-        return new Date(a.dueDate) - new Date(b.dueDate);
-      } else if (sortBy === 'status') {
-        return a.status.localeCompare(b.status);
-      } else {
-        // Default priority sorting
-        const priorityOrder = { high: 0,medium: 1, low: 2 };
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
+  const handleClickOutside = (e) => {
+    if (e.target.className === 'modal-overlay') {
+      setIsModalOpen(false);
+      setEditingTask(null);
+    }
+  };
+
+  const sortTasksByDueDate = (tasksToSort) => {
+    return [...tasksToSort].sort((a, b) => {
+      return new Date(a.dueDate) - new Date(b.dueDate);
     });
   };
 
   const organizeTasks = (tasksData) => {
-    const organized = {
-      high: [],
-      medium: [],
-      low: []
-    };
+    if (sortBy === 'Priority') {
+      return {
+        high: tasksData.filter(task => task.priority === 'high'),
+        medium: tasksData.filter(task => task.priority === 'medium'),
+        low: tasksData.filter(task => task.priority === 'low')
+      };
+    } else {
+      const organized = {
+        todo: tasksData.filter(task => task.status === 'todo'),
+        backlog: tasksData.filter(task => task.status === 'backlog'),
+        completed: tasksData.filter(task => task.status === 'completed')
+      };
 
-    tasksData.forEach(task => {
-      organized[task.priority].push(task);
-    });
+      if (sortBy === 'Due Date') {
+        Object.keys(organized).forEach(status => {
+          organized[status] = sortTasksByDueDate(organized[status]);
+        });
+      }
 
-    // Sort each priority group
-    Object.keys(organized).forEach(priority => {
-      organized[priority] = sortTasks(organized[priority]);
-    });
-
-    return organized;
+      return organized;
+    }
   };
 
   const fetchTasks = async () => {
@@ -88,7 +122,7 @@ const TaskBoard = () => {
           'Authorization': `${token}`
         }
       });
-      
+
       const data = await response.json();
       setTasks(organizeTasks(data));
     } catch (error) {
@@ -111,7 +145,7 @@ const TaskBoard = () => {
         >
           <div className="task-header">
             <h3>{task.title}</h3>
-            <button 
+            <button
               className="edit-button"
               onClick={() => {
                 setEditingTask(task);
@@ -133,17 +167,17 @@ const TaskBoard = () => {
     </Draggable>
   );
 
-  const TaskColumn = ({ title, tasks, priorityLevel }) => (
-    <Droppable droppableId={priorityLevel}>
+  const TaskColumn = ({ title, tasks, columnId }) => (
+    <Droppable droppableId={columnId}>
       {(provided) => (
-        <div 
+        <div
           className="task-column"
           ref={provided.innerRef}
           {...provided.droppableProps}
         >
           <div className="column-header">
             <div className="priority-indicator">
-              <span className={`priority-dot ${priorityLevel}`}></span>
+              <span className={`priority-dot ${columnId}`}></span>
               <h2>{title}</h2>
             </div>
             <div className="task-count">
@@ -175,15 +209,35 @@ const TaskBoard = () => {
         </div>
         <div className="header-actions">
           <div className="sort-dropdown">
-            <button className="sort-button">
+            <button
+              className="sort-button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
               Sort by : <b>{sortBy}</b>
               <ChevronDown size={16} />
             </button>
-            <div className="sort-menu">
-              <button onClick={() => setSortBy('priority')}>Priority</button>
-              <button onClick={() => setSortBy('dueDate')}>Due Date</button>
-              <button onClick={() => setSortBy('status')}>Status</button>
-            </div>
+            {isDropdownOpen && (
+              <div className="sort-menu">
+                <button onClick={() => {
+                  setSortBy('Priority');
+                  setIsDropdownOpen(false);
+                }}>
+                  Priority
+                </button>
+                <button onClick={() => {
+                  setSortBy('Due Date');
+                  setIsDropdownOpen(false);
+                }}>
+                  Due Date
+                </button>
+                <button onClick={() => {
+                  setSortBy('Status');
+                  setIsDropdownOpen(false);
+                }}>
+                  Status
+                </button>
+              </div>
+            )}
           </div>
           <button className="create-task-button" onClick={() => setIsModalOpen(true)}>
             <Plus size={20} />
@@ -194,75 +248,197 @@ const TaskBoard = () => {
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="task-columns">
-          <TaskColumn 
-            title="High" 
-            tasks={tasks.high}
-            priorityLevel="high"
-          />
-          <TaskColumn 
-            title="Medium" 
-            tasks={tasks.medium}
-            priorityLevel="medium"
-          />
-          <TaskColumn 
-            title="Low" 
-            tasks={tasks.low}
-            priorityLevel="low"
-          />
+          {getColumnsBySort().map(column => (
+            <TaskColumn
+              key={column.id}
+              title={column.title}
+              tasks={tasks[column.id] || []}
+              columnId={column.id}
+            />
+          ))}
         </div>
       </DragDropContext>
 
-      {/* Task Form Modal */}
       {isModalOpen && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={handleClickOutside}>
           <div className="modal-content">
-            <h2>{editingTask ? 'Edit Task' : 'Create New Task'}</h2>
-            <form className="task-form">
-              <div className="form-group">
+            <div className="modal-header">
+              <h2>{editingTask ? 'Edit Task' : 'Create New Task'}</h2>
+              <button
+                className="close-button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingTask(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <form className="task-form" onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                const taskData = editingTask ? editingTask : newTask;
+                const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
+
+                const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TASK}`, {
+                  method: editingTask ? 'PUT' : 'POST',
+                  headers: {
+                    'Authorization': `${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    ...taskData,
+                    assignedTo: userId
+                  })
+                });
+
+                if (response.ok) {
+                  setIsModalOpen(false);
+                  setEditingTask(null);
+                  setNewTask({
+                    title: '',
+                    description: '',
+                    priority: 'medium',
+                    status: 'todo',
+                    dueDate: '',
+                    assignedTo:userId,
+                    subtasks: []
+                  });
+                  // Fetch updated tasks
+                  fetchTasks();
+                }
+              } catch (error) {
+                console.error('Failed to save task:', error);
+              }
+            }}>
+              <div className="form-section">
                 <label>Title</label>
                 <input
                   type="text"
                   value={editingTask ? editingTask.title : newTask.title}
-                  onChange={(e) => editingTask 
-                    ? setEditingTask({...editingTask, title: e.target.value})
-                    : setNewTask({...newTask, title: e.target.value})
+                  onChange={(e) => editingTask
+                    ? setEditingTask({ ...editingTask, title: e.target.value })
+                    : setNewTask({ ...newTask, title: e.target.value })
                   }
                   placeholder="Enter task title"
+                  className="input-field"
+                  required
                 />
               </div>
-              <div className="form-group">
+
+              <div className="form-section">
                 <label>Priority</label>
-                <select
-                  value={editingTask ? editingTask.priority : newTask.priority}
-                  onChange={(e) => editingTask
-                    ? setEditingTask({...editingTask, priority: e.target.value})
-                    : setNewTask({...newTask, priority: e.target.value})
-                  }
-                >
-                  <option value="high">High Priority</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low Priority</option>
-                </select>
+                <div className="priority-slider">
+                  <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    value={editingTask
+                      ? (editingTask.priority === 'high' ? 2 : editingTask.priority === 'medium' ? 1 : 0)
+                      : (newTask.priority === 'high' ? 2 : newTask.priority === 'medium' ? 1 : 0)
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const priority = value === '2' ? 'high' : value === '1' ? 'medium' : 'low';
+                      editingTask
+                        ? setEditingTask({ ...editingTask, priority })
+                        : setNewTask({ ...newTask, priority });
+                    }}
+                    className="priority-range"
+                  />
+                  <div className="priority-labels">
+                    <span className="low">Low</span>
+                    <span className="medium">Medium</span>
+                    <span className="high">High</span>
+                  </div>
+                </div>
               </div>
-              <div className="form-group">
+
+              <div className="form-section">
+                <label>Status</label>
+                <div className="status-radio">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="todo"
+                      checked={(editingTask ? editingTask.status : newTask.status) === 'todo'}
+                      onChange={(e) => editingTask
+                        ? setEditingTask({ ...editingTask, status: e.target.value })
+                        : setNewTask({ ...newTask, status: e.target.value })
+                      }
+                    />
+                    Todo
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="backlog"
+                      checked={(editingTask ? editingTask.status : newTask.status) === 'backlog'}
+                      onChange={(e) => editingTask
+                        ? setEditingTask({ ...editingTask, status: e.target.value })
+                        : setNewTask({ ...newTask, status: e.target.value })
+                      }
+                    />
+                    Backlog
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="completed"
+                      checked={(editingTask ? editingTask.status : newTask.status) === 'completed'}
+                      onChange={(e) => editingTask
+                        ? setEditingTask({ ...editingTask, status: e.target.value })
+                        : setNewTask({ ...newTask, status: e.target.value })
+                      }
+                    />
+                    Completed
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <label>Description</label>
+                <textarea
+                  value={editingTask ? editingTask.description : newTask.description}
+                  onChange={(e) => {
+                    const words = e.target.value.trim().split(/\s+/).length;
+                    if (words <= 150) {
+                      editingTask
+                        ? setEditingTask({ ...editingTask, description: e.target.value })
+                        : setNewTask({ ...newTask, description: e.target.value });
+                    }
+                  }}
+                  placeholder="Enter task description (max 150 words)"
+                  className="input-field textarea"
+                  rows="4"
+                  required
+                />
+                <span className="word-count">
+                  {(editingTask ? editingTask.description : newTask.description)
+                    .trim().split(/\s+/).filter(word => word !== '').length} / 150 words
+                </span>
+              </div>
+
+              <div className="form-section">
                 <label>Due Date</label>
                 <input
                   type="date"
                   value={editingTask ? editingTask.dueDate : newTask.dueDate}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => editingTask
-                    ? setEditingTask({...editingTask, dueDate: e.target.value})
-                    : setNewTask({...newTask, dueDate: e.target.value})
+                    ? setEditingTask({ ...editingTask, dueDate: e.target.value })
+                    : setNewTask({ ...newTask, dueDate: e.target.value })
                   }
+                  className="input-field"
+                  required
                 />
               </div>
+
               <div className="form-actions">
-                <button type="button" onClick={() => {
-                  setIsModalOpen(false);
-                  setEditingTask(null);
-                }}>
-                  Cancel
-                </button>
                 <button type="submit" className="primary">
                   {editingTask ? 'Save Changes' : 'Create Task'}
                 </button>
