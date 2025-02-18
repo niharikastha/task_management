@@ -1,9 +1,11 @@
 import React from 'react';
 import { Edit } from 'lucide-react';
 import { Draggable } from 'react-beautiful-dnd';
-import { format, isAfter, isBefore, addDays } from 'date-fns';
+import { format, isBefore, addDays } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const TaskCard = ({ task, index, onEdit }) => {
+  const navigate = useNavigate();
   const draggableId = task._id || `task-${index}-${Date.now()}`;
   
   const truncateDescription = (text, wordCount = 10) => {
@@ -55,6 +57,14 @@ const TaskCard = ({ task, index, onEdit }) => {
     }
   };
 
+  const handleCardClick = (e) => {
+    if (e.target.closest('.edit-button')) {
+      onEdit(task); 
+      return;
+    }
+    navigate(`/tasks/${task._id}`, { state: { task } });
+  };
+
   return (
     <Draggable draggableId={draggableId} index={index} key={draggableId}>
       {(provided, snapshot) => (
@@ -64,6 +74,7 @@ const TaskCard = ({ task, index, onEdit }) => {
           {...provided.dragHandleProps}
           className={`task-card ${getCardBackgroundColor()} ${snapshot.isDragging ? 'is-dragging' : ''}`}
           data-task-id={draggableId}
+          onClick={handleCardClick}
         >
           <div className="task-header">
             <h3>{task.title}</h3>

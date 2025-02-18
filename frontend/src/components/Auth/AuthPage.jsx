@@ -99,7 +99,7 @@ const AuthPage = () => {
       const data = await response.json();
       if (data.success) {
         localStorage.setItem(API_CONFIG.TOKEN_KEY, data.data.token);
-        navigate('/task', { 
+        navigate('/tasks', { 
           state: { 
             name: formData.name || data.data.name,
             email: formData.email 
