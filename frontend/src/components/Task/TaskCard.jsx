@@ -4,6 +4,8 @@ import { Draggable } from 'react-beautiful-dnd';
 import { format, isAfter, isBefore, addDays } from 'date-fns';
 
 const TaskCard = ({ task, index, onEdit }) => {
+  const draggableId = task._id || `task-${index}-${Date.now()}`;
+  
   const truncateDescription = (text, wordCount = 10) => {
     if (!text) return '';
     const words = text.split(' ');
@@ -39,15 +41,29 @@ const TaskCard = ({ task, index, onEdit }) => {
   };
 
   const dueDateStatus = getDueDateStatus(task.dueDate);
+  
+  const getCardBackgroundColor = () => {
+    switch (task.priority) {
+      case 'high':
+        return 'task-card-high';
+      case 'medium':
+        return 'task-card-medium';
+      case 'low':
+        return 'task-card-low';
+      default:
+        return '';
+    }
+  };
 
   return (
-    <Draggable draggableId={task._id} index={index}>
-      {(provided) => (
+    <Draggable draggableId={draggableId} index={index} key={draggableId}>
+      {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className="task-card"
+          className={`task-card ${getCardBackgroundColor()} ${snapshot.isDragging ? 'is-dragging' : ''}`}
+          data-task-id={draggableId}
         >
           <div className="task-header">
             <h3>{task.title}</h3>
