@@ -16,7 +16,8 @@ const TaskBoard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('Priority');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [tasks, setTasks] = useState({
+    const [allTasks, setAllTasks] = useState([]); // Store all tasks in a single array
+    const [organizedTasks, setOrganizedTasks] = useState({
         high: [],
         medium: [],
         low: [],
@@ -26,7 +27,6 @@ const TaskBoard = () => {
     });
     const [loading, setLoading] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
-    const [filteredTasks, setFilteredTasks] = useState({});
     const token = localStorage.getItem("auth_token");
 
     let userId = "";
@@ -54,29 +54,51 @@ const TaskBoard = () => {
 
     useEffect(() => {
         fetchTasks();
-    }, [sortBy]);
+    }, []);
 
     useEffect(() => {
-        filterTasks();
-    }, [searchQuery, tasks]);
+        organizeTasks();
+    }, [sortBy, allTasks, searchQuery]); 
 
-    const filterTasks = () => {
-        if (!searchQuery.trim()) {
-            setFilteredTasks(tasks);
-            return;
-        }
+    const sortTasksByDueDate = (tasksToSort) => {
+        return [...tasksToSort].sort((a, b) => {
+            return new Date(a.dueDate) - new Date(b.dueDate);
+        });
+    };
 
-        const query = searchQuery.toLowerCase().trim();
-        const filtered = {};
+    const organizeTasks = () => {
+        let filteredTasks = allTasks;
 
-        Object.keys(tasks).forEach(key => {
-            filtered[key] = tasks[key].filter(task =>
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            filteredTasks = allTasks.filter(task =>
                 task.title.toLowerCase().includes(query) ||
                 task.description.toLowerCase().includes(query)
             );
-        });
+        }
 
-        setFilteredTasks(filtered);
+        let organized;
+        if (sortBy === 'Priority') {
+            organized = {
+                high: filteredTasks.filter(task => task.priority === 'high'),
+                medium: filteredTasks.filter(task => task.priority === 'medium'),
+                low: filteredTasks.filter(task => task.priority === 'low')
+            };
+        } else {
+            organized = {
+                todo: filteredTasks.filter(task => task.status === 'todo'),
+                backlog: filteredTasks.filter(task => task.status === 'backlog'),
+                completed: filteredTasks.filter(task => task.status === 'completed')
+            };
+
+            if (sortBy === 'Due Date') {
+                Object.keys(organized).forEach(status => {
+                    organized[status] = sortTasksByDueDate(organized[status]);
+                });
+            }
+        }
+
+        setOrganizedTasks(organized);
     };
 
     const getColumnsBySort = () => {
@@ -103,20 +125,20 @@ const TaskBoard = () => {
         if (!result.destination) return;
 
         const { source, destination } = result;
-        const newTasks = { ...tasks };
-
-        const draggedTask = newTasks[source.droppableId].splice(source.index, 1)[0];
-        newTasks[destination.droppableId].splice(destination.index, 0, draggedTask);
-
-        const originalTask = { ...draggedTask };
-
+        const updatedTasks = [...allTasks];
+        const sourceList = organizedTasks[source.droppableId];
+        const draggedTask = sourceList[source.index];
+        
+        const updatedTask = { ...draggedTask };
         if (sortBy === 'Status' || sortBy === 'Due Date') {
-            draggedTask.status = destination.droppableId;
+            updatedTask.status = destination.droppableId;
         } else if (sortBy === 'Priority') {
-            draggedTask.priority = destination.droppableId;
+            updatedTask.priority = destination.droppableId;
         }
 
-        setTasks(newTasks);
+        const taskIndex = updatedTasks.findIndex(t => t._id === draggedTask._id);
+        updatedTasks[taskIndex] = updatedTask;
+        setAllTasks(updatedTasks);
 
         try {
             const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
@@ -126,7 +148,7 @@ const TaskBoard = () => {
                     'Authorization': `${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(draggedTask)
+                body: JSON.stringify(updatedTask)
             });
 
             if (!response.ok) {
@@ -142,58 +164,13 @@ const TaskBoard = () => {
         } catch (error) {
             console.error('Failed to update task after drag:', error);
             
-            const revertedTasks = { ...newTasks };
-            revertedTasks[destination.droppableId] = revertedTasks[destination.droppableId].filter(
-                t => t._id !== originalTask._id
-            );
-            revertedTasks[source.droppableId].splice(source.index, 0, originalTask);
-            
-            setTasks(revertedTasks);
+            updatedTasks[taskIndex] = draggedTask;
+            setAllTasks(updatedTasks);
             
             toast.error(`Failed to update task`, {
                 position: "top-right",
                 autoClose: 2000,
             });
-        }
-    };
-
-    const handleClickOutside = (e) => {
-        if (e.target.className === 'modal-overlay') {
-            setIsModalOpen(false);
-            setEditingTask(null);
-        }
-    };
-
-    const sortTasksByDueDate = (tasksToSort) => {
-        return [...tasksToSort].sort((a, b) => {
-            return new Date(a.dueDate) - new Date(b.dueDate);
-        });
-    };
-
-    const organizeTasks = (tasksData) => {
-        const tasks = Array.isArray(tasksData) ? tasksData :
-            (tasksData?.tasks || tasksData?.data || []);
-
-        if (sortBy === 'Priority') {
-            return {
-                high: tasks.filter(task => task.priority === 'high'),
-                medium: tasks.filter(task => task.priority === 'medium'),
-                low: tasks.filter(task => task.priority === 'low')
-            };
-        } else {
-            const organized = {
-                todo: tasks.filter(task => task.status === 'todo'),
-                backlog: tasks.filter(task => task.status === 'backlog'),
-                completed: tasks.filter(task => task.status === 'completed')
-            };
-
-            if (sortBy === 'Due Date') {
-                Object.keys(organized).forEach(status => {
-                    organized[status] = sortTasksByDueDate(organized[status]);
-                });
-            }
-
-            return organized;
         }
     };
 
@@ -212,9 +189,8 @@ const TaskBoard = () => {
             }
 
             const data = await response.json();
-            const organizedTasks = organizeTasks(data);
-            setTasks(organizedTasks);
-            setFilteredTasks(organizedTasks);
+            const tasks = Array.isArray(data) ? data : (data?.tasks || data?.data || []);
+            setAllTasks(tasks);
         } catch (error) {
             console.error('Failed to fetch tasks:', error);
             toast.error(`Failed to fetch tasks: ${error.message || 'Unknown error'}`, {
@@ -258,6 +234,18 @@ const TaskBoard = () => {
                 throw new Error(`Server returned ${response.status}: ${await response.text()}`);
             }
 
+            const savedTask = await response.json();
+
+            if (isEditing) {
+                setAllTasks(prevTasks => 
+                    prevTasks.map(task => 
+                        task._id === savedTask._id ? savedTask : task
+                    )
+                );
+            } else {
+                setAllTasks(prevTasks => [...prevTasks, savedTask]);
+            }
+
             setIsModalOpen(false);
             setEditingTask(null);
             setNewTask({
@@ -269,7 +257,7 @@ const TaskBoard = () => {
                 assignedTo: userId,
                 subtasks: []
             });
-            await fetchTasks();
+            
             return true;
         } catch (error) {
             console.error('Failed to save task:', error);
@@ -387,7 +375,7 @@ const TaskBoard = () => {
                                 <TaskColumn
                                     key={column.id}
                                     title={column.title}
-                                    tasks={(searchQuery ? filteredTasks : tasks)[column.id] || []}
+                                    tasks={organizedTasks[column.id] || []}
                                     columnId={column.id}
                                 />
                             ))}
@@ -405,7 +393,6 @@ const TaskBoard = () => {
                         onSave={handleSaveTask}
                         task={editingTask}
                         userId={userId}
-                        handleClickOutside={handleClickOutside}
                     />
                 )}
             </div>

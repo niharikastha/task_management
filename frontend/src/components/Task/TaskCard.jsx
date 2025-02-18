@@ -91,11 +91,6 @@ const TaskCard = ({ task, index, onEdit }) => {
             )}
           </div>
           <div className="task-details">
-            {task.subtasks && task.subtasks.length > 0 && (
-              <div className="subtasks-progress">
-                <span>{task.subtasks.filter(st => st.completed).length} of {task.subtasks.length} tasks</span>
-              </div>
-            )}
             {task.dueDate && (
               <div className={`task-due-date ${dueDateStatus}`}>
                 {formatDate(task.dueDate)}
