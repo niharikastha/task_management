@@ -4,7 +4,7 @@ import { Draggable } from 'react-beautiful-dnd';
 import { format, isBefore, addDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
-const TaskCard = ({ task, index, onEdit }) => {
+const TaskCard = ({ task, index, onEdit, sortBy }) => {
   const navigate = useNavigate();
   const draggableId = task._id || `task-${index}-${Date.now()}`;
   
@@ -24,7 +24,6 @@ const TaskCard = ({ task, index, onEdit }) => {
     }
     return format(parsedDate, 'MMM dd, yyyy');
   };
-  
 
   const getDueDateStatus = (dateString) => {
     if (!dateString) return '';
@@ -57,12 +56,54 @@ const TaskCard = ({ task, index, onEdit }) => {
     }
   };
 
+  const getPriorityBadgeColor = () => {
+    switch (task.priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusBadgeColor = () => {
+    switch (task.status) {
+      case 'backlog':
+        return 'bg-blue-100 text-blue-800';
+      case 'todo':
+        return 'bg-purple-100 text-purple-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const handleCardClick = (e) => {
     if (e.target.closest('.edit-button')) {
       onEdit(task); 
       return;
     }
     navigate(`/tasks/${task._id}`, { state: { task } });
+  };
+
+  const renderMetadataBadge = () => {
+    if (sortBy === 'Priority') {
+      return (
+        <span className={`priority-status ${getStatusBadgeColor()}`}>
+          {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+        </span>
+      );
+    } else {
+      return (
+        <span className={`priority-status ${getPriorityBadgeColor()}`}>
+          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+        </span>
+      );
+    }
   };
 
   return (
@@ -96,6 +137,7 @@ const TaskCard = ({ task, index, onEdit }) => {
                 {formatDate(task.dueDate)}
               </div>
             )}
+           {renderMetadataBadge()}
           </div>
         </div>
       )}

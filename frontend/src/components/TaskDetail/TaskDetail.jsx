@@ -209,9 +209,6 @@ const TaskDetailPage = () => {
                                     <option value="todo">Todo</option>
                                     <option value="completed">Completed</option>
                                 </select>
-                                <div className={`status-badge ${editedTask.status}`}>
-                                    {editedTask.status?.charAt(0).toUpperCase() + editedTask.status?.slice(1)}
-                                </div>
                             </div>
 
                             <div className="control-group">

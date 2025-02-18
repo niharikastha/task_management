@@ -16,7 +16,7 @@ const TaskBoard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('Priority');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [allTasks, setAllTasks] = useState([]); // Store all tasks in a single array
+    const [allTasks, setAllTasks] = useState([]); 
     const [organizedTasks, setOrganizedTasks] = useState({
         high: [],
         medium: [],
@@ -289,6 +289,7 @@ const TaskBoard = () => {
                                 task={task}
                                 index={index}
                                 onEdit={() => handleEditTask(task)}
+                                sortBy={sortBy}
                             />
                         ))}
                         {provided.placeholder}

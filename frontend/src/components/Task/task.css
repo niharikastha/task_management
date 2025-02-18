@@ -190,6 +190,9 @@
 .task-details {
   font-size: 12px;
   color: #6b7280;
+  justify-content: space-between;
+  display: flex;
+  margin-right: 2px;
 }
 
 .subtasks-progress {
@@ -489,6 +492,7 @@ input[type="range"] {
   /* background: linear-gradient(to right, #36b37e, #ffab00, #ff5630); */
   border-radius: 3px;
   outline: none;
+  padding: 0px 10px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -607,9 +611,18 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: bold;
-  margin-left: auto;
   display: inline-block;
 }
+.priority-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  display: inline-block;
+  background: #c7a0f1;
+  color: rgb(241, 235, 235);
+}
+
 .task-due-date.overdue {
   background-color: #fde2e2; 
   color: #c53030;

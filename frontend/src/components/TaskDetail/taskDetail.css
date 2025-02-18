@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #4a90e2;
+  --primary-color: #a377d1;
   --success-color: #2ecc71;
   --warning-color: #f1c40f;
   --danger-color: #e74c3c;
@@ -129,6 +129,8 @@ body {
   background: linear-gradient(to right, #36b37e, #ffab00, #ff5630);
   border-radius: 3px;
   outline: none;
+  padding: 0px 10px;
+  margin: 18px 0 0 0 ;
 }
 
 .priority-slider::-webkit-slider-thumb {
@@ -193,7 +195,7 @@ body {
 }
 
 .task-description-textarea {
-  width: 100%;
+  width: 95%;
   min-height: 300px;
   padding: 1rem;
   border: 2px solid var(--border-color);
@@ -227,7 +229,7 @@ body {
 }
 
 .submit-button:hover {
-  background-color: #357abd;
+  background-color: #89279c;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
