@@ -8,6 +8,8 @@ import './task.css';
 import { jwtDecode } from 'jwt-decode';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
+import Navbar from '../Navbar/Navbar';
+import { useLocation } from 'react-router-dom';
 
 const TaskBoard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +30,9 @@ const TaskBoard = () => {
     const token = localStorage.getItem("auth_token");
 
     let userId = "";
+    const location = useLocation();
+    const username = location.state?.name || 'User';
+
     if (token) {
         try {
             const decodedToken = jwtDecode(token);
@@ -104,17 +109,15 @@ const TaskBoard = () => {
         newTasks[destination.droppableId].splice(destination.index, 0, draggedTask);
 
         const originalTask = { ...draggedTask };
-        
-        // Update the task properties based on the target column
+
         if (sortBy === 'Status' || sortBy === 'Due Date') {
-            draggedTask.status = destination.droppableId;  
+            draggedTask.status = destination.droppableId;
         } else if (sortBy === 'Priority') {
             draggedTask.priority = destination.droppableId;
         }
 
         setTasks(newTasks);
-        
-        // Update the task in the backend
+
         try {
             const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
             const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TASK}/${draggedTask._id}`, {
@@ -132,14 +135,13 @@ const TaskBoard = () => {
             
             toast.success('Task updated successfully!', {
                 position: "top-right",
-                autoClose: 3000,
+                autoClose: 1000,
                 className: 'slide-in-toast'
             });
             
         } catch (error) {
             console.error('Failed to update task after drag:', error);
             
-            // Revert changes if the API call fails
             const revertedTasks = { ...newTasks };
             revertedTasks[destination.droppableId] = revertedTasks[destination.droppableId].filter(
                 t => t._id !== originalTask._id
@@ -150,7 +152,7 @@ const TaskBoard = () => {
             
             toast.error(`Failed to update task: ${error.message || 'Unknown error'}`, {
                 position: "top-right",
-                autoClose: 5000,
+                autoClose: 2000,
             });
         }
     };
@@ -217,7 +219,7 @@ const TaskBoard = () => {
             console.error('Failed to fetch tasks:', error);
             toast.error(`Failed to fetch tasks: ${error.message || 'Unknown error'}`, {
                 position: "top-right",
-                autoClose: 5000,
+                autoClose: 2000,
             });
         } finally {
             setLoading(false);
@@ -309,101 +311,104 @@ const TaskBoard = () => {
     );
 
     return (
-        <div className="taskboard-container">
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-            
-            <div className="taskboard-header">
-                <div className="search-bar">
-                    <Search size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search anything..."
-                        value={searchQuery}
-                        onChange={handleSearch}
-                    />
-                </div>
-                <div className="header-actions">
-                    <div className="sort-dropdown">
-                        <button
-                            className="sort-button"
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        >
-                            Sort by : <b>{sortBy}</b>
-                            <ChevronDown size={16} />
-                        </button>
-                        {isDropdownOpen && (
-                            <div className="sort-menu">
-                                <button onClick={() => {
-                                    setSortBy('Priority');
-                                    setIsDropdownOpen(false);
-                                }}>
-                                    Priority
-                                </button>
-                                <button onClick={() => {
-                                    setSortBy('Due Date');
-                                    setIsDropdownOpen(false);
-                                }}>
-                                    Due Date
-                                </button>
-                                <button onClick={() => {
-                                    setSortBy('Status');
-                                    setIsDropdownOpen(false);
-                                }}>
-                                    Status
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                    <button className="create-task-button" onClick={() => setIsModalOpen(true)}>
-                        <Plus size={20} />
-                        Create a new task
-                    </button>
-                </div>
-            </div>
-
-            {loading ? (
-                <div className="loading-container">
-                    <Loader size={36} className="spinner" />
-                    <p>Loading tasks...</p>
-                </div>
-            ) : (
-                <DragDropContext onDragEnd={handleDragEnd}>
-                    <div className="task-columns">
-                        {getColumnsBySort().map(column => (
-                            <TaskColumn
-                                key={column.id}
-                                title={column.title}
-                                tasks={(searchQuery ? filteredTasks : tasks)[column.id] || []}
-                                columnId={column.id}
-                            />
-                        ))}
-                    </div>
-                </DragDropContext>
-            )}
-
-            {isModalOpen && (
-                <TaskModal
-                    isOpen={isModalOpen}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setEditingTask(null);
-                    }}
-                    onSave={handleSaveTask}
-                    task={editingTask}
-                    userId={userId}
-                    handleClickOutside={handleClickOutside}
+        <div>
+            <Navbar username={username} />
+            <div className="taskboard-container">
+                <ToastContainer
+                    position="top-right"
+                    autoClose={1000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
                 />
-            )}
+
+                <div className="taskboard-header">
+                    <div className="search-bar">
+                        <Search size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search anything..."
+                            value={searchQuery}
+                            onChange={handleSearch}
+                        />
+                    </div>
+                    <div className="header-actions">
+                        <div className="sort-dropdown">
+                            <button
+                                className="sort-button"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            >
+                                Sort by : <b>{sortBy}</b>
+                                <ChevronDown size={16} />
+                            </button>
+                            {isDropdownOpen && (
+                                <div className="sort-menu">
+                                    <button onClick={() => {
+                                        setSortBy('Priority');
+                                        setIsDropdownOpen(false);
+                                    }}>
+                                        Priority
+                                    </button>
+                                    <button onClick={() => {
+                                        setSortBy('Due Date');
+                                        setIsDropdownOpen(false);
+                                    }}>
+                                        Due Date
+                                    </button>
+                                    <button onClick={() => {
+                                        setSortBy('Status');
+                                        setIsDropdownOpen(false);
+                                    }}>
+                                        Status
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <button className="create-task-button" onClick={() => setIsModalOpen(true)}>
+                            <Plus size={20} />
+                            Create a new task
+                        </button>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="loading-container">
+                        <Loader size={36} className="spinner" />
+                        <p>Loading tasks...</p>
+                    </div>
+                ) : (
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                        <div className="task-columns">
+                            {getColumnsBySort().map(column => (
+                                <TaskColumn
+                                    key={column.id}
+                                    title={column.title}
+                                    tasks={(searchQuery ? filteredTasks : tasks)[column.id] || []}
+                                    columnId={column.id}
+                                />
+                            ))}
+                        </div>
+                    </DragDropContext>
+                )}
+
+                {isModalOpen && (
+                    <TaskModal
+                        isOpen={isModalOpen}
+                        onClose={() => {
+                            setIsModalOpen(false);
+                            setEditingTask(null);
+                        }}
+                        onSave={handleSaveTask}
+                        task={editingTask}
+                        userId={userId}
+                        handleClickOutside={handleClickOutside}
+                    />
+                )}
+            </div>
         </div>
     );
 };

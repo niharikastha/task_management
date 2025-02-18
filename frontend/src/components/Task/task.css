@@ -68,7 +68,7 @@
   padding: 8px 0;
   margin-top: 4px;
   z-index: 10;
-  width: 150px; /* Same width as button */
+  width: 150px;
 }
 
 .sort-dropdown:hover .sort-menu {
@@ -309,7 +309,7 @@ textarea.input-field {
 .modal-header h2 {
   margin: 0;
   font-size: 1.25rem;
-  padding-right: 40px; /* Space for close button */
+  padding-right: 40px; 
 }
 
 .close-button {
@@ -437,7 +437,6 @@ textarea.input-field {
   background: #8f63bd;
 }
 
-/* Responsive Styles */
 @media (max-width: 640px) {
   .modal-overlay {
     padding: 10px;
@@ -484,11 +483,10 @@ textarea.input-field {
   }
 }
 
-/* Style the range input */
 input[type="range"] {
   -webkit-appearance: none;
   height: 6px;
-  background: linear-gradient(to right, #36b37e, #ffab00, #ff5630);
+  /* background: linear-gradient(to right, #36b37e, #ffab00, #ff5630); */
   border-radius: 3px;
   outline: none;
 }
@@ -530,7 +528,6 @@ input[type="range"]::-moz-range-thumb {
   margin-bottom: 8px;
 }
 
-/* Add these styles to your CSS file */
 @media (max-width: 1024px) {
   .task-columns {
     grid-template-columns: repeat(2, 1fr);
@@ -579,20 +576,19 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
-/* Task Priority Styles */
 .task-card-high {
-  background-color: rgba(255, 102, 102, 0.15); /* Soft Red */
-  border-left: 5px solid #d32f2f; /* Bold Red */
+  background-color: rgba(255, 102, 102, 0.15);
+  border-left: 5px solid #d32f2f; 
 }
 
 .task-card-medium {
-  background-color: rgba(255, 193, 7, 0.15); /* Soft Yellow */
-  border-left: 5px solid #f57c00; /* Bold Orange */
+  background-color: rgba(255, 193, 7, 0.15); 
+  border-left: 5px solid #f57c00;
 }
 
 .task-card-low {
-  background-color: rgba(129, 199, 132, 0.15); /* Soft Green */
-  border-left: 5px solid #388e3c; /* Bold Green */
+  background-color: rgba(129, 199, 132, 0.15); 
+  border-left: 5px solid #388e3c; 
 }
 
 

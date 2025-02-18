@@ -33,7 +33,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
       await onSave(taskData, !!editingTask);
       toast.success(`Task ${editingTask ? 'updated' : 'created'} successfully!`, {
         position: "top-right",
-        autoClose: 3000,
+        autoClose: 1000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -45,7 +45,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
       console.error('Failed to save task:', error);
       toast.error(`Failed to ${editingTask ? 'update' : 'create'} task: ${error.message || 'Unknown error'}`, {
         position: "top-right",
-        autoClose: 5000,
+        autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,

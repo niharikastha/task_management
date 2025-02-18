@@ -135,7 +135,7 @@ const TaskDetailPage = () => {
             }
 
             toast.success('Task deleted successfully!');
-            navigate('/tasks'); // Redirect to tasks page after deletion
+            navigate('/tasks');
         } catch (error) {
             console.error('Failed to delete task:', error);
             toast.error('Failed to delete task');
