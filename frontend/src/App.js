@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AuthPage from './components/Auth/AuthPage';
-import TaskBoard from './components/Task/TaskPage';
+import TaskBoard from './components/Task/TaskBoard';
 
 function App() {
   return (

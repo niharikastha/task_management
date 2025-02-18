@@ -74,7 +74,7 @@ const taskController = {
         try {
             const { title, description, status, dueDate, priority } = req.body;
 
-            if (status && !["pending", "completed"].includes(status)) {
+            if (status && !["todo", "completed","backlog"].includes(status)) {
                 return res.status(400).json({ success: false, message: "Invalid status value." });
             }
 
