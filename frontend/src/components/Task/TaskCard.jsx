@@ -1,9 +1,12 @@
 import React from 'react';
 import { Edit } from 'lucide-react';
+import { Draggable } from 'react-beautiful-dnd';
 import { useNavigate } from 'react-router-dom';
 
 const TaskCard = ({ task, index, onEdit, sortBy }) => {
   const navigate = useNavigate();
+  const draggableId = task._id;
+
   const truncateDescription = (text, wordCount = 10) => {
     if (!text) return '';
     const words = text.split(' ');
@@ -79,37 +82,43 @@ const TaskCard = ({ task, index, onEdit, sortBy }) => {
   };
 
   return (
-    <div
-      className={`task-card ${getCardBackgroundColor()}`}
-      onClick={handleCardClick}
-    >
-      <div className="task-header">
-        <h3>{task.title}</h3>
-        <button
-          className="edit-button"
-          onClick={handleEditClick}
+    <Draggable draggableId={draggableId} index={index} key={draggableId}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={`task-card ${getCardBackgroundColor()} ${snapshot.isDragging ? 'is-dragging' : ''}`}
+          data-task-id={draggableId}
+          onClick={handleCardClick}
         >
-          <Edit size={16} />
-        </button>
-      </div>
-
-      <div className="task-content">
-        {task.description && (
-          <p className="task-description">
-            {truncateDescription(task.description)}
-          </p>
-        )}
-      </div>
-
-      <div className="task-details">
-        {task.dueDate && (
-          <div className={`task-due-date ${getDueDateStatus(task.dueDate)}`}>
-            {formatDate(task.dueDate)}
+          <div className="task-header">
+            <h3>{task.title}</h3>
+            <button
+              className="edit-button"
+              onClick={handleEditClick}
+            >
+              <Edit size={16} />
+            </button>
           </div>
-        )}
-        {renderMetadataBadge()}
-      </div>
-    </div>
+          <div className="task-content">
+            {task.description && (
+              <p className="task-description">
+                {truncateDescription(task.description)}
+              </p>
+            )}
+          </div>
+          <div className="task-details">
+            {task.dueDate && (
+              <div className={`task-due-date ${getDueDateStatus(task.dueDate)}`}>
+                {formatDate(task.dueDate)}
+              </div>
+            )}
+            {renderMetadataBadge()}
+          </div>
+        </div>
+      )}
+    </Draggable>
   );
 };
 

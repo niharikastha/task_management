@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Search, ChevronDown, Plus } from 'lucide-react';
 
 const SearchAndFilter = ({ 
@@ -10,6 +10,18 @@ const SearchAndFilter = ({
   setSortBy,
   onCreateTask 
 }) => {
+  
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+  }, [setIsDropdownOpen]);
+
   return (
     <div className="taskboard-header">
       <div className="search-bar">
@@ -22,12 +34,12 @@ const SearchAndFilter = ({
         />
       </div>
       <div className="header-actions">
-        <div className="sort-dropdown">
+        <div className="sort-dropdown" ref={dropdownRef}>
           <button
             className="sort-button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            Sort by : <b>{sortBy}</b>
+            Sort by: <b>{sortBy}</b>
             <ChevronDown size={16} />
           </button>
           {isDropdownOpen && (

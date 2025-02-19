@@ -1,7 +1,6 @@
 .taskboard-container {
   padding: 24px;
   background: #eeeef1;
-  min-height: 100vh;
   font-family: 'Inter', sans-serif;
 }
 
@@ -437,53 +436,8 @@ textarea.input-field {
   background: #8f63bd;
 }
 
-@media (max-width: 640px) {
-  .modal-overlay {
-    padding: 10px;
-  }
-
-  .modal-content {
-    max-height: 95vh;
-  }
-
-  .modal-header h2 {
-    font-size: 1.125rem;
-  }
-
-  .status-radio {
-    gap: 15px;
-  }
-
-  .radio-label {
-    font-size: 0.813rem;
-  }
-
-  .form-actions {
-    padding-bottom: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .modal-header {
-    padding: 15px 15px 0;
-  }
-
-  .task-form {
-    padding: 15px;
-  }
-
-  .close-button {
-    top: 10px;
-    right: 15px;
-  }
-
-  .status-radio {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-
 input[type="range"] {
+  -webkit-appearance: none;
   height: 6px;
   background: linear-gradient(to right, #36b37e, #ffab00, #ff5630);
   border-radius: 3px;
@@ -526,50 +480,6 @@ input[type="range"]::-moz-range-thumb {
   font-size: 12px;
   color: #6b7280;
   margin-bottom: 8px;
-}
-
-@media (max-width: 1024px) {
-  .task-columns {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .taskboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 640px) {
-  .task-columns {
-    grid-template-columns: 1fr;
-  }
-  
-  .task-column {
-    min-height: auto;
-    margin-bottom: 24px;
-  }
-  
-  .create-task-button {
-    font-size: 0;
-    padding: 8px;
-  }
-  
-  .create-task-button .lucide-plus {
-    margin-right: 0;
-  }
-  
-  .sort-button {
-    width: 140px;
-    font-size: 13px;
-  }
 }
 
 .task-card-high {
@@ -633,8 +543,7 @@ input[type="range"]::-moz-range-thumb {
 .loading-container {
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  height: 50vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -649,4 +558,97 @@ input[type="range"]::-moz-range-thumb {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+  .task-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .taskboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-header h2 {
+    font-size: 1.125rem;
+  }
+
+  .status-radio {
+    gap: 15px;
+  }
+
+  .radio-label {
+    font-size: 0.813rem;
+  }
+
+  .form-actions {
+    padding-bottom: 20px;
+  }
+  .task-columns {
+    grid-template-columns: 1fr;
+  }
+  
+  .task-column {
+    min-height: auto;
+    margin-bottom: 24px;
+  }
+  
+  .create-task-button {
+    font-size: 0;
+    padding: 8px;
+  }
+  
+  .create-task-button .lucide-plus {
+    margin-right: 0;
+  }
+  
+  .sort-button {
+    width: 140px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 15px 15px 0;
+  }
+
+  .task-form {
+    padding: 15px;
+  }
+
+  .close-button {
+    top: 10px;
+    right: 15px;
+  }
+
+  .status-radio {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task-column {
+    margin-bottom: 0px;
+    padding: 10px;
+  }
 }

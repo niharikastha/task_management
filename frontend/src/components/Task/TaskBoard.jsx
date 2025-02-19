@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { ToastContainer, toast } from 'react-toastify';
 import { jwtDecode } from 'jwt-decode';
 import { useLocation } from 'react-router-dom';
 import API_CONFIG from '../../config/api.config';
-import TaskColumns from './TaskColumns';
+import TaskCard from './TaskCard';
 import SearchAndFilter from './SearchAndFilter';
 import Loading from './Loading';
 import TaskModal from './TaskModal';
@@ -42,15 +42,15 @@ const TaskBoard = () => {
     }
   }
 
-  const defaultTask = {
+  const [newTask, setNewTask] = useState({
     title: '',
     description: '',
     priority: 'medium',
     status: 'todo',
     dueDate: '',
-    assignedTo: userId,
+    assignedTo: userId || '',
     subtasks: []
-  };
+  });
 
   useEffect(() => {
     fetchTasks();
@@ -59,21 +59,6 @@ const TaskBoard = () => {
   useEffect(() => {
     organizeTasks();
   }, [sortBy, allTasks, searchQuery]); 
-
-  const getColumns = () => {
-    if (sortBy === 'Priority') {
-      return [
-        { id: 'high', title: 'High' },
-        { id: 'medium', title: 'Medium' },
-        { id: 'low', title: 'Low' }
-      ];
-    }
-    return [
-      { id: 'backlog', title: 'Backlog' },
-      { id: 'todo', title: 'Todo' },
-      { id: 'completed', title: 'Completed' }
-    ];
-  };
 
   const sortByDueDate = (tasks) => {
     return [...tasks].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
@@ -111,42 +96,72 @@ const TaskBoard = () => {
     setOrganizedTasks(organized);
   };
 
+  const getColumnsBySort = () => {
+    switch (sortBy) {
+      case 'Priority':
+        return [
+          { id: 'high', title: 'High' },
+          { id: 'medium', title: 'Medium' },
+          { id: 'low', title: 'Low' }
+        ];
+      case 'Due Date':
+      case 'Status':
+        return [
+          { id: 'backlog', title: 'Backlog' },
+          { id: 'todo', title: 'Todo' },
+          { id: 'completed', title: 'Completed' }
+        ];
+      default:
+        return [];
+    }
+  };
+
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
 
     const { source, destination } = result;
-    const tasks = [...allTasks];
-    const task = organizedTasks[source.droppableId][source.index];
-    
-    const updatedTask = { ...task };
-    updatedTask[sortBy === 'Priority' ? 'priority' : 'status'] = destination.droppableId;
+    const updatedTasks = [...allTasks];
+    const sourceList = organizedTasks[source.droppableId];
+    const draggedTask = sourceList[source.index];
 
-    const taskIndex = tasks.findIndex(t => t._id === task._id);
-    tasks[taskIndex] = updatedTask;
-    setAllTasks(tasks);
+    const updatedTask = { ...draggedTask };
+    if (sortBy === 'Status' || sortBy === 'Due Date') {
+      updatedTask.status = destination.droppableId;
+    } else if (sortBy === 'Priority') {
+      updatedTask.priority = destination.droppableId;
+    }
+
+    const taskIndex = updatedTasks.findIndex(t => t._id === draggedTask._id);
+    updatedTasks[taskIndex] = updatedTask;
+    setAllTasks(updatedTasks);
 
     try {
       const token = localStorage.getItem(API_CONFIG.TOKEN_KEY);
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TASK}/${task._id}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TASK}/${draggedTask._id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': token,
+          'Authorization': `${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(updatedTask)
       });
 
-      if (!response.ok) throw new Error('Failed to update task');
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
+
       toast.success('Task updated successfully!', {
         position: "top-right",
         autoClose: 1000,
         className: 'slide-in-toast'
       });
     } catch (error) {
-      console.error('Update failed:', error);
-      tasks[taskIndex] = task;
-      setAllTasks(tasks);
-      toast.error('Failed to update task', {
+      console.error('Failed to update task after drag:', error);
+
+      updatedTasks[taskIndex] = draggedTask;
+      setAllTasks(updatedTasks);
+
+      toast.error(`Failed to update task`, {
         position: "top-right",
         autoClose: 2000,
       });
@@ -196,14 +211,27 @@ const TaskBoard = () => {
 
       const savedTask = await response.json();
 
-      setAllTasks(prev => isEditing 
-        ? prev.map(task => task._id === savedTask._id ? savedTask : task)
-        : [...prev, savedTask]
-      );
+      if (isEditing) {
+        setAllTasks(prevTasks =>
+          prevTasks.map(task =>
+            task._id === savedTask._id ? savedTask : task
+          )
+        );
+      } else {
+        setAllTasks(prevTasks => [...prevTasks, savedTask]);
+      }
 
       setIsModalOpen(false);
       setEditingTask(null);
-      await fetchTasks();
+      setNewTask({
+        title: '',
+        description: '',
+        priority: 'medium',
+        status: 'todo',
+        dueDate: '',
+        assignedTo: userId,
+        subtasks: []
+      });
 
       return true;
     } catch (error) {
@@ -216,6 +244,40 @@ const TaskBoard = () => {
     setEditingTask(task);
     setIsModalOpen(true);
   };
+
+
+  const TaskColumn = ({ title, tasks, columnId }) => (
+    <Droppable droppableId={columnId}>
+      {(provided) => (
+        <div
+          className="task-column"
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+        >
+          <div className="column-header">
+            <div className="priority-indicator">
+              <span className={`priority-dot ${columnId}`}></span>
+              <h2>{title}</h2>
+            </div>
+            <div className="task-count">
+              {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+            </div>
+          </div>
+          <div className="task-list">
+            {tasks.map((task, index) => (
+              <TaskCard
+                key={task._id}
+                task={task}
+                index={index}
+                onEdit={() => handleEditTask(task)}
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        </div>
+      )}
+    </Droppable>
+  );
 
   return (
     <div>
@@ -247,12 +309,16 @@ const TaskBoard = () => {
           <Loading />
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <TaskColumns 
-              columns={getColumns()}
-              tasks={organizedTasks}
-              onEditTask={handleEditTask}
-              sortBy={sortBy}
-            />
+            <div className="task-columns">
+              {getColumnsBySort().map(column => (
+                <TaskColumn
+                  key={column.id}
+                  title={column.title}
+                  tasks={organizedTasks[column.id] || []}
+                  columnId={column.id}
+                />
+              ))}
+            </div>
           </DragDropContext>
         )}
 

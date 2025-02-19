@@ -78,17 +78,15 @@ const TaskDetailPage = () => {
             }
 
             toast.success('Task updated successfully!');
-            setLoading(true);
 
             setTimeout(() => {
                 navigate('/tasks');
             }, 500);
 
         } catch (error) {
-            console.error('Failed to update task:', error);
-            toast.error('Failed to update task');
-        } finally {
-            setSaving(false);
+          console.error('Failed to update task:', error);
+          toast.error('Failed to update task');
+          setSaving(false);
         }
     };
 
