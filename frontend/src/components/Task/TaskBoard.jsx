@@ -210,7 +210,7 @@ const TaskBoard = () => {
       if (!response.ok) throw new Error(`Server returned ${response.status}`);
 
       const savedTask = await response.json();
-
+      fetchTasks();  
       if (isEditing) {
         setAllTasks(prevTasks =>
           prevTasks.map(task =>
