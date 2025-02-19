@@ -6,6 +6,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+const corsOptions = {
+  origin: process.env.APP_URL,
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 
 const taskRoutes = require("./routes/taskRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -24,7 +30,7 @@ app.get('/', (req, res) => {
       message: 'Hello',
     });
   });
-  
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
