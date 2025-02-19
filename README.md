@@ -90,12 +90,14 @@ The frontend application will run on `http://localhost:3000`
 
 ## Screenshots
 
-> [Please add screenshots of your application here]
-> Recommended sections to showcase:
-> - Dashboard view
-> - Task creation form
-> - Project overview
-> - Mobile responsive design
+- Login Page![Screenshot from 2025-02-19 16-50-19](https://github.com/user-attachments/assets/6373101d-ab21-44d4-a708-490a4c84b7a2)
+- Signup Page![Screenshot from 2025-02-19 16-50-27](https://github.com/user-attachments/assets/f7756c11-cf3b-4946-a6bd-75dbfdf8f4de)
+- Dashboard![Screenshot from 2025-02-19 17-27-52](https://github.com/user-attachments/assets/8dd24e4f-8ca2-4115-af49-4960dac12434)
+- Drag And Drop Functionality![Screenshot from 2025-02-19 17-27-10](https://github.com/user-attachments/assets/8985868f-eb33-4837-ae6e-abf40a929b61)
+- Create new task![Screenshot from 2025-02-19 17-28-10](https://github.com/user-attachments/assets/02e24360-4cbd-4666-bf17-6356896731b9)
+- Edit a task![Screenshot from 2025-02-19 17-28-35](https://github.com/user-attachments/assets/eacc785c-5df5-45a8-8033-4edc71a85293)
+- Mobile View ![Screenshot_20250219-173735_Chrome](https://github.com/user-attachments/assets/172b9366-5891-4ca5-91b3-1e95b24cd1e8)
+
 
 ## Technology Stack
 
