@@ -3,6 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import authImage from '../../assets/auth-illustration.webp';
 import API_CONFIG from '../../config/api.config';
+import { Loader } from 'lucide-react';
 import './auth.css';
 
 const AuthPage = () => {
@@ -20,6 +21,7 @@ const AuthPage = () => {
     confirm: false
   });
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = email => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -103,6 +105,8 @@ const AuthPage = () => {
 
     if (!validateUserInput()) return;
 
+    setLoading(true);
+
     try {
       const endpoint = mode === 'login' ? API_CONFIG.ENDPOINTS.LOGIN : API_CONFIG.ENDPOINTS.SIGNUP;
       const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
@@ -125,6 +129,8 @@ const AuthPage = () => {
       }
     } catch (err) {
       setErrorMessage('Connection error. Please try again');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -233,9 +239,17 @@ const AuthPage = () => {
                 </div>
               )}
 
-              <button type="submit" className="submit-button">
-                {mode === 'login' ? 'Sign In' : 'Sign Up'}
+              <button type="submit" className="submit-button" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader size={16} className="spinner" />
+                    {mode === 'login' ? 'Signing In...' : 'Signing Up...'}
+                  </>
+                ) : (
+                  mode === 'login' ? 'Sign In' : 'Sign Up'
+                )}
               </button>
+
             </form>
 
             <div className="switch-mode">

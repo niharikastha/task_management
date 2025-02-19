@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import API_CONFIG from '../../config/api.config';
-import { jwtDecode } from 'jwt-decode';
 import { Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 
