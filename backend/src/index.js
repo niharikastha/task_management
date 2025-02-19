@@ -21,7 +21,7 @@ const connectDB = require("./config/db");
 connectDB();
 app.get('/', (req, res) => {
   res.json({
-    message: 'Server is running',
+    message: 'Hello there !',
   });
 });
 
