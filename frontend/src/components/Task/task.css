@@ -351,7 +351,7 @@ textarea.input-field {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  margin-bottom: 8px;
+  margin: 8px;
   color: #374151;
 }
 
@@ -377,9 +377,6 @@ textarea.input-field {
   max-height: 200px;
 }
 
-.priority-slider {
-  padding: 10px 0;
-}
 
 .priority-range {
   width: 100%;
@@ -489,7 +486,7 @@ textarea.input-field {
 input[type="range"] {
   -webkit-appearance: none;
   height: 6px;
-  /* background: linear-gradient(to right, #36b37e, #ffab00, #ff5630); */
+  background: linear-gradient(to right, #36b37e, #ffab00, #ff5630);
   border-radius: 3px;
   outline: none;
   padding: 0px 10px;
@@ -619,8 +616,8 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.75rem;
   font-weight: bold;
   display: inline-block;
-  background: #c7a0f1;
-  color: rgb(241, 235, 235);
+  color: #705291;
+  background-color: rgb(241, 235, 235);
 }
 
 .task-due-date.overdue {

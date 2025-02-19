@@ -126,7 +126,6 @@ body {
 .priority-slider {
   -webkit-appearance: none;
   height: 6px;
-  background: linear-gradient(to right, #36b37e, #ffab00, #ff5630);
   border-radius: 3px;
   outline: none;
   padding: 0px 10px;
