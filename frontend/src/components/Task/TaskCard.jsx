@@ -1,13 +1,9 @@
 import React from 'react';
 import { Edit } from 'lucide-react';
-import { Draggable } from 'react-beautiful-dnd';
-import { format, isBefore, addDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 const TaskCard = ({ task, index, onEdit, sortBy }) => {
   const navigate = useNavigate();
-  const draggableId = task._id || `task-${index}-${Date.now()}`;
-  
   const truncateDescription = (text, wordCount = 10) => {
     if (!text) return '';
     const words = text.split(' ');
@@ -17,69 +13,46 @@ const TaskCard = ({ task, index, onEdit, sortBy }) => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    const parsedDate = new Date(dateString);
-    if (isNaN(parsedDate.getTime())) {
-      console.error('Invalid date format:', dateString);
-      return 'Invalid date';
-    }
-    return format(parsedDate, 'MMM dd, yyyy');
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
   };
 
   const getDueDateStatus = (dateString) => {
     if (!dateString) return '';
-    
+
     const dueDate = new Date(dateString);
     const today = new Date();
-    const inTwoDays = addDays(today, 2);
-    
-    if (isBefore(dueDate, today)) {
-      return 'overdue';
-    } else if (isBefore(dueDate, inTwoDays)) {
-      return 'upcoming';
-    } else {
-      return 'future';
-    }
+    const twoDaysFromNow = new Date(today.setDate(today.getDate() + 2));
+
+    if (dueDate < today) return 'overdue';
+    if (dueDate < twoDaysFromNow) return 'upcoming';
+    return 'future';
   };
 
-  const dueDateStatus = getDueDateStatus(task.dueDate);
-  
   const getCardBackgroundColor = () => {
-    switch (task.priority) {
-      case 'high':
-        return 'task-card-high';
-      case 'medium':
-        return 'task-card-medium';
-      case 'low':
-        return 'task-card-low';
-      default:
-        return '';
-    }
+    const priorityClasses = {
+      high: 'task-card-high',
+      medium: 'task-card-medium',
+      low: 'task-card-low'
+    };
+    return priorityClasses[task.priority] || '';
   };
 
-  const getPriorityBadgeColor = () => {
-    switch (task.priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusBadgeColor = () => {
-    switch (task.status) {
-      case 'backlog':
-        return 'bg-blue-100 text-blue-800';
-      case 'todo':
-        return 'bg-purple-100 text-purple-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getBadgeColor = (type) => {
+    const colors = {
+      priority: {
+        high: 'badge-red',
+        medium: 'badge-yellow',
+        low: 'badge-green'
+      },
+      status: {
+        backlog: 'badge-blue',
+        todo: 'badge-purple',
+        completed: 'badge-green'
+      }
+    };
+    return colors[type][task.priority || task.status] || 'badge-gray';
   };
 
   const handleCardClick = (e) => {
@@ -90,58 +63,53 @@ const TaskCard = ({ task, index, onEdit, sortBy }) => {
     navigate(`/tasks/${task._id}`, { state: { task } });
   };
 
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    onEdit(task);
+  };
+
   const renderMetadataBadge = () => {
-    if (sortBy === 'Priority') {
-      return (
-        <span className={`priority-status ${getStatusBadgeColor()}`}>
-          {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
-        </span>
-      );
-    } else {
-      return (
-        <span className={`priority-status ${getPriorityBadgeColor()}`}>
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-        </span>
-      );
-    }
+    const content = sortBy === 'Priority' ? task.status : task.priority;
+    const badgeType = sortBy === 'Priority' ? 'status' : 'priority';
+    return (
+      <span className={`priority-status ${getBadgeColor(badgeType)}`}>
+        {content.charAt(0).toUpperCase() + content.slice(1)}
+      </span>
+    );
   };
 
   return (
-    <Draggable draggableId={draggableId} index={index} key={draggableId}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          className={`task-card ${getCardBackgroundColor()} ${snapshot.isDragging ? 'is-dragging' : ''}`}
-          data-task-id={draggableId}
-          onClick={handleCardClick}
+    <div
+      className={`task-card ${getCardBackgroundColor()}`}
+      onClick={handleCardClick}
+    >
+      <div className="task-header">
+        <h3>{task.title}</h3>
+        <button
+          className="edit-button"
+          onClick={handleEditClick}
         >
-          <div className="task-header">
-            <h3>{task.title}</h3>
-            <button
-              className="edit-button"
-              onClick={onEdit}
-            >
-              <Edit size={16} />
-            </button>
+          <Edit size={16} />
+        </button>
+      </div>
+
+      <div className="task-content">
+        {task.description && (
+          <p className="task-description">
+            {truncateDescription(task.description)}
+          </p>
+        )}
+      </div>
+
+      <div className="task-details">
+        {task.dueDate && (
+          <div className={`task-due-date ${getDueDateStatus(task.dueDate)}`}>
+            {formatDate(task.dueDate)}
           </div>
-          <div className="task-content">
-            {task.description && (
-              <p className="task-description">{truncateDescription(task.description)}</p>
-            )}
-          </div>
-          <div className="task-details">
-            {task.dueDate && (
-              <div className={`task-due-date ${dueDateStatus}`}>
-                {formatDate(task.dueDate)}
-              </div>
-            )}
-           {renderMetadataBadge()}
-          </div>
-        </div>
-      )}
-    </Draggable>
+        )}
+        {renderMetadataBadge()}
+      </div>
+    </div>
   );
 };
 

@@ -11,7 +11,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
     description: '',
     priority: 'medium',
     status: 'todo',
-    dueDate: '',
+    dueDate: new Date().toISOString().split('T')[0],
     assignedTo: userId || '',
     subtasks: []
   });
@@ -34,11 +34,6 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
       toast.success(`Task ${editingTask ? 'updated' : 'created'} successfully!`, {
         position: "top-right",
         autoClose: 1000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
         className: 'slide-in-toast'
       });
     } catch (error) {
@@ -46,11 +41,6 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
       toast.error(`Failed to ${editingTask ? 'update' : 'create'} task: ${error.message || 'Unknown error'}`, {
         position: "top-right",
         autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
       });
     } finally {
       setLoading(false);
@@ -62,12 +52,7 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
       <div className="modal-content">
         <div className="modal-header">
           <h2>{editingTask ? 'Edit Task' : 'Create New Task'}</h2>
-          <button
-            className="close-button"
-            onClick={onClose}
-          >
-            ×
-          </button>
+          <button className="close-button" onClick={onClose}>×</button>
         </div>
 
         <form className="task-form" onSubmit={handleSubmit}>
@@ -155,7 +140,6 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
               placeholder="Enter task description (max 150 words)"
               className="input-field textarea"
               rows="4"
-              required
             />
             <span className="word-count">
               {taskData.description.trim().split(/\s+/).filter(word => word !== '').length} / 150 words
@@ -170,16 +154,11 @@ const TaskModal = ({ isOpen, onClose, onSave, task: editingTask, userId, handleC
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setTaskData({ ...taskData, dueDate: e.target.value })}
               className="input-field"
-              required
             />
           </div>
 
           <div className="form-actions">
-            <button 
-              type="submit" 
-              className="primary"
-              disabled={loading}
-            >
+            <button type="submit" className="primary" disabled={loading}>
               {loading ? (
                 <>
                   <Loader size={16} className="spinner" />

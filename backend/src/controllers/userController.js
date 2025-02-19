@@ -108,51 +108,6 @@ const userControlller = {
         }
     },
     
-
-    forgotPassword: async (req, res) => {
-        try {
-            const { email } = req.body;
-
-            if (!validator.isEmail(email)) {
-                return res.status(400).json({ success: false, message: "Invalid email format." });
-            }
-
-            const user = await User.findOne({ email });
-            if (!user) {
-                return res.status(400).json({ success: false, message: "User not found." });
-            }
-
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-            const transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL,
-                    pass: process.env.EMAIL_PASSWORD,
-                },
-            });
-
-            const mailOptions = {
-                from: process.env.EMAIL,
-                to: email,
-                subject: "OTP for Password Reset",
-                text: `Your OTP for password reset is ${otp}. It is valid for 10 minutes.`,
-            };
-
-            user.otp = otp;
-            user.otpExpiry = Date.now() + 10 * 60 * 1000;
-            await user.save();
-
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    return res.status(500).json({ success: false, message: "Error sending OTP email." });
-                }
-                return res.status(200).json({ success: true, message: "OTP sent successfully." });
-            });
-        } catch (error) {
-            return res.status(500).json({ success: false, message: "Server error.", error: error.message });
-        }
-    }
 }
 
 module.exports = userControlller;

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import API_CONFIG from '../../config/api.config';
 import './taskDetail.css';
 import Navbar from '../Navbar/Navbar';
+import Loading from '../Task/Loading';
 
 const TaskDetailPage = () => {
     const { taskId } = useParams();
@@ -93,11 +94,17 @@ const TaskDetailPage = () => {
 
     if (loading) {
         return (
-            <div className="task-detail-container">
-                <div className="loading-spinner">Loading...</div>
+            <div>
+                <Navbar username={username} />
+                <div className="task-detail-container">
+                    <div className="loading-container">
+                        <Loading />
+                    </div>
+                </div>
             </div>
         );
     }
+
 
     if (!editedTask) {
         return <div className="task-detail-container">Task not found</div>;

@@ -18,7 +18,7 @@
   background: white;
   border-radius: 8px;
   padding: 8px 16px;
-  width: 300px;
+  max-width: 300px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -484,7 +484,6 @@ textarea.input-field {
 }
 
 input[type="range"] {
-  -webkit-appearance: none;
   height: 6px;
   background: linear-gradient(to right, #36b37e, #ffab00, #ff5630);
   border-radius: 3px;
@@ -540,10 +539,6 @@ input[type="range"]::-moz-range-thumb {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-  }
-  
-  .search-bar {
-    width: 100%;
   }
   
   .header-actions {
@@ -633,4 +628,25 @@ input[type="range"]::-moz-range-thumb {
 .task-due-date.future {
   background-color: #e6fffa; 
   color: #4a962c; 
+}
+
+.loading-container {
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8); 
+  z-index: 9999;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
