@@ -4,11 +4,15 @@ require('dotenv').config();
 
 const app = express();
 
-const corsOptions = {
-  origin: process.env.APP_URL,
-  credentials: true
-};
-app.use(cors(corsOptions));
+// const corsOptions = {
+//   origin: process.env.REACT_APP_API_URL || "http://localhost:3000",
+//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//   credentials: true
+// };
+
+// app.use(cors(corsOptions));
+app.use(cors()); 
+
 app.use(express.json());
 
 const taskRoutes = require("./routes/taskRoutes");
@@ -38,5 +42,9 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   });
 });
+const PORT = process.env.PORT || 5000;
 
+ app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 module.exports = app;
