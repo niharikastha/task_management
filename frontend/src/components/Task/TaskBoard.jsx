@@ -270,6 +270,7 @@ const TaskBoard = () => {
                 task={task}
                 index={index}
                 onEdit={() => handleEditTask(task)}
+                sortBy={sortBy}
               />
             ))}
             {provided.placeholder}

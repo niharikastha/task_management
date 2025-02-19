@@ -26,20 +26,51 @@ const TaskCard = ({ task, index, onEdit, sortBy }) => {
 
     const dueDate = new Date(dateString);
     const today = new Date();
-    const twoDaysFromNow = new Date(today.setDate(today.getDate() + 2));
+    
+    dueDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const dayAfterTomorrow = new Date(today);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
-    if (dueDate < today) return 'overdue';
-    if (dueDate < twoDaysFromNow) return 'upcoming';
-    return 'future';
+    if (dueDate < today) {
+      return 'overdue';  
+    } else if (dueDate <= tomorrow) {
+      return 'upcoming';  
+    }
+    return 'future';  
   };
 
   const getCardBackgroundColor = () => {
-    const priorityClasses = {
-      high: 'task-card-high',
-      medium: 'task-card-medium',
-      low: 'task-card-low'
-    };
-    return priorityClasses[task.priority] || '';
+    if (sortBy === 'Status') {
+      const statusColors = {
+        completed: 'task-card-low',
+        todo: 'task-card-medium',
+        backlog: 'task-card-high'
+      };
+      return statusColors[task.status] || '';
+    } 
+    else if (sortBy === 'Priority') {
+      const priorityColors = {
+        high: 'task-card-high',      
+        medium: 'task-card-medium',   
+        low: 'task-card-low'
+      };
+      return priorityColors[task.priority] || '';
+    }
+    else if (sortBy === 'Due Date') {
+      const dueDateStatus = getDueDateStatus(task.dueDate);
+      const dueDateColors = {
+        overdue: 'task-card-high',     
+        upcoming: 'task-card-medium', 
+        future: 'task-card-low'       
+      };
+      return dueDateColors[dueDateStatus] || '';
+    }
+    return '';
   };
 
   const getBadgeColor = (type) => {
@@ -72,15 +103,16 @@ const TaskCard = ({ task, index, onEdit, sortBy }) => {
   };
 
   const renderMetadataBadge = () => {
-    const content = sortBy === 'Priority' ? task.status : task.priority;
+    const label = sortBy === 'Priority' ? 'Status' : 'Priority';
+    const value = sortBy === 'Priority' ? task.status : task.priority;
     const badgeType = sortBy === 'Priority' ? 'status' : 'priority';
+    
     return (
       <span className={`priority-status ${getBadgeColor(badgeType)}`}>
-        {content.charAt(0).toUpperCase() + content.slice(1)}
+        {`${label}: ${value.charAt(0).toUpperCase() + value.slice(1)}`}
       </span>
     );
   };
-
   return (
     <Draggable draggableId={draggableId} index={index} key={draggableId}>
       {(provided, snapshot) => (
