@@ -7,126 +7,137 @@ import './auth.css';
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
+  const [mode, setMode] = useState('login');
+  const [userData, setUserData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
   const [touchedFields, setTouchedFields] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validationSummary, setValidationSummary] = useState('');
+  const [passwordVisibility, setPasswordVisibility] = useState({
+    main: false,
+    confirm: false
+  });
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const validateEmail = email => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{6,}$/;
-    return passwordRegex.test(password);
+  const validatePassword = pass => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{6,}$/.test(pass);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setValidationSummary(''); 
+    setUserData(current => ({ ...current, [name]: value }));
+    setErrorMessage('');
   };
 
-  const handleBlur = (e) => {
+  const handleBlur = e => {
     const { name } = e.target;
-    setTouchedFields(prev => ({ ...prev, [name]: true }));
+    setTouchedFields(current => ({ ...current, [name]: true }));
   };
 
-  const getInputValidationState = (fieldName) => {
+  const getFieldStatus = fieldName => {
     if (!touchedFields[fieldName]) return '';
     
-    switch (fieldName) {
-      case 'name':
-        return !isLogin && !formData.name ? 'invalid' : '';
-      case 'email':
-        return !formData.email || !validateEmail(formData.email) ? 'invalid' : '';
-      case 'password':
-        return !formData.password || !validatePassword(formData.password) ? 'invalid' : '';
-      case 'confirmPassword':
-        return !isLogin && formData.password !== formData.confirmPassword ? 'invalid' : '';
-      default:
-        return '';
-    }
+    const checks = {
+      name: () => mode === 'signup' && !userData.name,
+      email: () => !userData.email || !validateEmail(userData.email),
+      password: () => !userData.password || !validatePassword(userData.password),
+      confirmPassword: () => mode === 'signup' && userData.password !== userData.confirmPassword
+    };
+
+    return checks[fieldName]?.() ? 'invalid' : '';
   };
 
-  const validateForm = () => {
-    let newTouchedFields = {};
-  
-    if (!isLogin && !formData.name.trim()) {
-      setValidationSummary('Full Name is required.');
-      newTouchedFields = { name: true };
-      setTouchedFields(newTouchedFields);
-      return false;
+  const validateUserInput = () => {
+    let newDirtyState = {};
+    const validationRules = [
+      {
+        condition: mode === 'signup' && !userData.name.trim(),
+        message: 'Please enter your full name',
+        field: 'name'
+      },
+      {
+        condition: !validateEmail(userData.email),
+        message: 'Please provide a valid email address',
+        field: 'email'
+      },
+      {
+        condition: !validatePassword(userData.password),
+        message: 'Password must be at least 6 characters with uppercase, lowercase, number, and special character',
+        field: 'password'
+      },
+      {
+        condition: mode === 'signup' && userData.password !== userData.confirmPassword,
+        message: 'Password confirmation does not match',
+        field: 'confirmPassword'
+      }
+    ];
+
+    for (const rule of validationRules) {
+      if (rule.condition) {
+        setErrorMessage(rule.message);
+        newDirtyState[rule.field] = true;
+        setTouchedFields(newDirtyState);
+        return false;
+      }
     }
-  
-    if (!validateEmail(formData.email)) {
-      setValidationSummary('Please enter a valid email address.');
-      newTouchedFields = { email: true };
-      setTouchedFields(newTouchedFields);
-      return false;
-    }
-    
-    if (!validatePassword(formData.password)) {
-      setValidationSummary('Password must contain at least 6 characters, including uppercase, lowercase, number, and special character.');
-      newTouchedFields = { password: true };
-      setTouchedFields(newTouchedFields);
-      return false;
-    }
-  
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      setValidationSummary('Passwords do not match.');
-      newTouchedFields = { confirmPassword: true };
-      setTouchedFields(newTouchedFields);
-      return false;
-    }
-  
-    setValidationSummary('');
+
+    setErrorMessage('');
     return true;
-  };  
-  
-  const handleSubmit = async (e) => {
+  };
+
+  const handleFormSubmission = async (e) => {
     e.preventDefault();
     
-    const fields = ['email', 'password'];
-    if (!isLogin) fields.push('name', 'confirmPassword');
+    const requiredFields = ['email', 'password'];
+    if (mode === 'signup') requiredFields.push('name', 'confirmPassword');
     
     setTouchedFields(
-      fields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
+      requiredFields.reduce((acc, field) => ({ ...acc, [field]: true }), {})
     );
 
-    if (!validateForm()) return;
+    if (!validateUserInput()) return;
 
     try {
-      const endpoint = isLogin ? API_CONFIG.ENDPOINTS.LOGIN : API_CONFIG.ENDPOINTS.SIGNUP;
+      const endpoint = mode === 'login' ? API_CONFIG.ENDPOINTS.LOGIN : API_CONFIG.ENDPOINTS.SIGNUP;
       const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
-      if (data.success) {
-        localStorage.setItem(API_CONFIG.TOKEN_KEY, data.data.token);
+      const result = await response.json();
+      if (result.success) {
+        localStorage.setItem(API_CONFIG.TOKEN_KEY, result.data.token);
         navigate('/tasks', { 
           state: { 
-            name: formData.name || data.data.name,
-            email: formData.email 
+            name: userData.name || result.data.name,
+            email: userData.email 
           } 
         });
       } else {
-        setValidationSummary(data.message || 'Authentication failed');
+        setErrorMessage(result.message || 'Authentication failed');
       }
-    } catch (error) {
-      setValidationSummary('An error occurred. Please try again later.');
+    } catch (err) {
+      setErrorMessage('Connection error. Please try again');
     }
+  };
+
+  const switchMode = () => {
+    setMode(current => current === 'login' ? 'signup' : 'login');
+    setTouchedFields({});
+    setErrorMessage('');
+    setUserData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
   return (
@@ -135,7 +146,7 @@ const AuthPage = () => {
         <div className="auth-image">
           <img 
             src={authImage}
-            alt="Illustration" 
+            alt="auth-task" 
             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           />
         </div>
@@ -143,27 +154,27 @@ const AuthPage = () => {
         <div className="auth-form">
           <div className="auth-form-container">
             <h2 className="auth-title">
-              {isLogin ? 'Hello Again!' : 'Create Account'}
+              {mode === 'login' ? 'Hello Again!' : 'Create Account'}
             </h2>
             <p className="auth-subtitle">
-              {isLogin ? 'Welcome back you\'ve been missed!' : 'Get started with your account'}
+              {mode === 'login' ? 'Welcome back you\'ve been missed!' : 'Get started with your account'}
             </p>
 
-            {validationSummary && (
+            {errorMessage && (
               <div className="validation-summary">
-                {validationSummary}
+                {errorMessage}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="auth-form-content">
-              {!isLogin && (
+            <form onSubmit={handleFormSubmission} className="auth-form-content">
+              {mode === 'signup' && (
                 <div className="form-group">
                   <input
                     type="text"
                     name="name"
                     placeholder="Full Name"
-                    className={`input-field ${getInputValidationState('name')}`}
-                    value={formData.name}
+                    className={`input-field ${getFieldStatus('name')}`}
+                    value={userData.name}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
                   />
@@ -175,8 +186,8 @@ const AuthPage = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address"
-                  className={`input-field ${getInputValidationState('email')}`}
-                  value={formData.email}
+                  className={`input-field ${getFieldStatus('email')}`}
+                  value={userData.email}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
                 />
@@ -184,65 +195,54 @@ const AuthPage = () => {
 
               <div className="form-group password-field">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={passwordVisibility.main ? "text" : "password"}
                   name="password"
                   placeholder="Password"
-                  className={`input-field ${getInputValidationState('password')}`}
-                  value={formData.password}
+                  className={`input-field ${getFieldStatus('password')}`}
+                  value={userData.password}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
                 />
                 <button
                   type="button"
                   className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setPasswordVisibility(prev => ({ ...prev, main: !prev.main }))}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {passwordVisibility.main ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
 
-              {!isLogin && (
+              {mode === 'signup' && (
                 <div className="form-group password-field">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={passwordVisibility.confirm ? "text" : "password"}
                     name="confirmPassword"
                     placeholder="Confirm Password"
-                    className={`input-field ${getInputValidationState('confirmPassword')}`}
-                    value={formData.confirmPassword}
+                    className={`input-field ${getFieldStatus('confirmPassword')}`}
+                    value={userData.confirmPassword}
                     onChange={handleInputChange}
                     onBlur={handleBlur}
                   />
                   <button
                     type="button"
                     className="password-toggle"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onClick={() => setPasswordVisibility(prev => ({ ...prev, confirm: !prev.confirm }))}
                   >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {passwordVisibility.confirm ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               )}
 
               <button type="submit" className="submit-button">
-                {isLogin ? 'Sign In' : 'Sign Up'}
+                {mode === 'login' ? 'Sign In' : 'Sign Up'}
               </button>
             </form>
 
             <div className="switch-mode">
-              <button
-                className="switch-mode-button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setTouchedFields({});
-                  setValidationSummary('');
-                  setFormData({
-                    name: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: ''
-                  });
-                }}
-              >
-                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+              <button className="switch-mode-button" onClick={switchMode}>
+                {mode === 'login' 
+                  ? "Don't have an account? Sign Up" 
+                  : "Already have an account? Sign In"}
               </button>
             </div>
           </div>

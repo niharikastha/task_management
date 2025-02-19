@@ -124,7 +124,6 @@ body {
 }
 
 .priority-slider {
-  -webkit-appearance: none;
   height: 6px;
   border-radius: 3px;
   outline: none;
